@@ -92,50 +92,35 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════
           HERO SECTION
       ═══════════════════════════════════════════════ */}
-      <section
-        style={{
-          position: "relative",
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          overflow: "hidden",
-          paddingTop: "68px",
-        }}
-      >
-        {/* Hero background image */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundImage: `url(https://d2xsxph8kpxj0f.cloudfront.net/310519663490180314/YbgXRCtSxpgqz345bJLVUX/hero-bg_0581fa2c.jpg)`,
-            backgroundSize: "cover",
-            backgroundPosition: "center 40%",
-            backgroundRepeat: "no-repeat",
-          }}
-        />
-        {/* Gradient overlay */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "linear-gradient(90deg, rgba(15,17,21,0.92) 0%, rgba(15,17,21,0.75) 50%, rgba(15,17,21,0.4) 100%)",
-          }}
-        />
-        {/* Bottom fade */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: "200px",
-            background: "linear-gradient(to top, #0F1115, transparent)",
-          }}
-        />
-
-        {/* Brand logo — small, neat badge in the top-right corner of the hero, below the header */}
-        <div
-          className="hero-logo-badge"
+      <section className="hero-scene">
+        {/* Decorative local scene. The copy below carries the message. */}
+        <div className="hero-scene__media">
+          <picture aria-hidden="true">
+            <source
+              type="image/avif"
+              srcSet="/hero/technologistika-hero-elbrus-780.avif 780w, /hero/technologistika-hero-elbrus-1280.avif 1280w"
+              sizes="(max-width: 767px) 100vw, min(1280px, 100vw)"
+            />
+            <source
+              type="image/webp"
+              srcSet="/hero/technologistika-hero-elbrus-780.webp 780w, /hero/technologistika-hero-elbrus-1280.webp 1280w"
+              sizes="(max-width: 767px) 100vw, min(1280px, 100vw)"
+            />
+            <img
+              src="/hero/technologistika-hero-elbrus-1280.jpg"
+              srcSet="/hero/technologistika-hero-elbrus-780.jpg 780w, /hero/technologistika-hero-elbrus-1280.jpg 1280w"
+              sizes="(max-width: 767px) 100vw, min(1280px, 100vw)"
+              alt=""
+              width={1280}
+              height={720}
+              decoding="async"
+              fetchPriority="high"
+            />
+          </picture>
+          <div className="hero-scene__scrim" aria-hidden="true" />
+          {/* On a narrow screen this media box is the lower band, so the mark sits on the scene instead of over the title. */}
+          <div
+            className="hero-logo-badge"
           style={{
             position: "absolute",
             top: "92px",
@@ -164,11 +149,14 @@ export default function Home() {
               opacity: 1,
             }}
           />
+          </div>
         </div>
 
-        <div className="container" style={{ position: "relative", zIndex: 1, paddingTop: "5rem", paddingBottom: "5rem" }}>
+        <div className="container hero-scene__copy">
+          <div className="hero-scene__readability" aria-hidden="true" />
           <div
             ref={heroSection.ref}
+            className="hero-scene__reveal"
             style={{
               maxWidth: "680px",
               opacity: heroSection.inView ? 1 : 0,
@@ -176,6 +164,7 @@ export default function Home() {
               transition: "all 0.7s ease-out",
             }}
           >
+          <div className="hero-scene__main">
             {/* Badge */}
             <div className="section-badge" style={{ marginBottom: "1.5rem" }}>
               Перевозка автомобилей · Россия и СНГ
@@ -212,7 +201,7 @@ export default function Home() {
             </p>
 
             {/* CTAs */}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "2.5rem" }}>
+            <div className="hero-scene__ctas" style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginBottom: "2.5rem" }}>
               <a href="#calculator" onClick={scrollToCalculator}>
                 <button className="btn-primary">
                   Рассчитать ориентировочно
@@ -226,9 +215,10 @@ export default function Home() {
                 </button>
               </a>
             </div>
+          </div>
 
             {/* Trust badges */}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem" }}>
+            <div className="hero-trust" style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem" }}>
               {["Проверенные перевозчики", "Договор на перевозку", "Фотофиксация по этапам"].map((badge) => (
                 <div key={badge} className="trust-badge">
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
