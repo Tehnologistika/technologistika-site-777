@@ -58,6 +58,43 @@ const serviceIcons: Record<string, React.ReactNode> = {
   building: <Building2 size={22} style={{ color: "#4FD1FF" }} />,
 };
 
+function LowerPlate({ name }: { name: "stats" | "services" | "tech" | "about" | "cta" }) {
+  const scene = {
+    stats: { file: "elbrus-slope-road", w: 640, h: 440, responsive: false },
+    services: { file: "elbrus-massif", w: 1000, h: 360, responsive: true },
+    tech: { file: "elbrus-slope-road", w: 640, h: 440, responsive: false },
+    about: { file: "elbrus-massif", w: 1000, h: 360, responsive: true },
+    cta: { file: "elbrus-road-bend", w: 1280, h: 300, responsive: true },
+  }[name];
+  const full = (ext: string) => `/hero/lower/${scene.file}.${ext}`;
+  const small = (ext: string) => `/hero/lower/${scene.file}-640.${ext}`;
+  return (
+    <div className="lower-scene__plate" aria-hidden="true">
+      <picture>
+        <source
+          type="image/avif"
+          srcSet={scene.responsive ? `${small("avif")} 640w, ${full("avif")} ${scene.w}w` : full("avif")}
+          sizes="100vw"
+        />
+        <source
+          type="image/webp"
+          srcSet={scene.responsive ? `${small("webp")} 640w, ${full("webp")} ${scene.w}w` : full("webp")}
+          sizes="100vw"
+        />
+        <img
+          src={full("jpg")}
+          srcSet={scene.responsive ? `${small("jpg")} 640w, ${full("jpg")} ${scene.w}w` : undefined}
+          sizes={scene.responsive ? "100vw" : undefined}
+          alt=""
+          width={scene.w}
+          height={scene.h}
+          decoding="async"
+        />
+      </picture>
+    </div>
+  );
+}
+
 const advantageIcons: Record<string, React.ReactNode> = {
   clock: <Clock size={20} style={{ color: "#4FD1FF" }} />,
   shield: <Shield size={20} style={{ color: "#4FD1FF" }} />,
@@ -236,7 +273,8 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════
           STATS BAR
       ═══════════════════════════════════════════════ */}
-      <section style={{ backgroundColor: "#161A20", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+      <section className="lower-scene lower-scene--stats" style={{ backgroundColor: "#161A20", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <LowerPlate name="stats" />
         <div className="container py-10">
           <div
             ref={statsSection.ref}
@@ -267,7 +305,8 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════
           SERVICES SECTION
       ═══════════════════════════════════════════════ */}
-      <section style={{ paddingTop: "6rem", paddingBottom: "6rem" }}>
+      <section className="lower-scene lower-scene--services" style={{ paddingTop: "6rem", paddingBottom: "6rem" }}>
+        <LowerPlate name="services" />
         <div className="container">
           <div
             ref={servicesSection.ref}
@@ -443,6 +482,7 @@ export default function Home() {
           TECHNOLOGY SECTION
       ═══════════════════════════════════════════════ */}
       <section
+        className="lower-scene lower-scene--tech"
         style={{
           paddingTop: "6rem",
           paddingBottom: "6rem",
@@ -453,18 +493,7 @@ export default function Home() {
           borderBottom: "1px solid rgba(255,255,255,0.06)",
         }}
       >
-        {/* Tech background */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundImage: `url(https://d2xsxph8kpxj0f.cloudfront.net/310519663490180314/YbgXRCtSxpgqz345bJLVUX/tech-section_7c55b084.jpg)`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            opacity: 0.18,
-          }}
-        />
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(10,13,16,0.95) 0%, rgba(10,13,16,0.7) 100%)" }} />
+        <LowerPlate name="tech" />
 
         <div className="container" style={{ position: "relative", zIndex: 1 }}>
           <div
@@ -537,24 +566,16 @@ export default function Home() {
           BRAND STORY / ELBRUS SECTION
       ═══════════════════════════════════════════════ */}
       <section
+        className="lower-scene lower-scene--about"
         style={{
           paddingTop: "6rem",
           paddingBottom: "6rem",
           position: "relative",
           overflow: "hidden",
+          backgroundColor: "#0F1115",
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundImage: `url(https://d2xsxph8kpxj0f.cloudfront.net/310519663490180314/YbgXRCtSxpgqz345bJLVUX/elbrus-abstract_08197e27.jpg)`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            opacity: 0.35,
-          }}
-        />
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(15,17,21,0.97) 0%, rgba(15,17,21,0.8) 60%, rgba(15,17,21,0.6) 100%)" }} />
+        <LowerPlate name="about" />
 
         <div className="container" style={{ position: "relative", zIndex: 1 }}>
           <div
@@ -647,6 +668,7 @@ export default function Home() {
           CTA BAND
       ═══════════════════════════════════════════════ */}
       <section
+        className="lower-scene lower-scene--cta"
         style={{
           paddingTop: "5rem",
           paddingBottom: "5rem",
@@ -654,6 +676,7 @@ export default function Home() {
           borderTop: "1px solid rgba(79, 209, 255, 0.12)",
         }}
       >
+        <LowerPlate name="cta" />
         <div className="container">
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: "1.5rem" }}>
             <h2 className="display-md" style={{ color: "#F5F7FA", maxWidth: "560px" }}>
