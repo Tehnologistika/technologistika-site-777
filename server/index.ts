@@ -2,6 +2,7 @@ import express from "express";
 import { createServer } from "http";
 import path from "path";
 import { fileURLToPath } from "url";
+import { SITE_ORIGIN, SITE_PAGES } from "../shared/seo";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,6 +38,20 @@ async function startServer() {
   const server = createServer(app);
 
   app.use(express.json({ limit: "64kb" }));
+
+  // Consolidate only this site's public GET/HEAD URLs. The lead POST is unchanged.
+  app.use((req, res, next) => {
+    if (req.method !== "GET" && req.method !== "HEAD") return next();
+    if (req.hostname === "www.xn--c1adkkjgb0abiz.xn--p1ai") {
+      return res.redirect(301, SITE_ORIGIN + req.originalUrl);
+    }
+    const pathname = req.path.replace(/\/index\.html$/, "/").replace(/\/+$/, "") || "/";
+    if (Object.hasOwn(SITE_PAGES, pathname) && pathname !== req.path) {
+      const query = req.originalUrl.slice(req.path.length);
+      return res.redirect(301, pathname + query);
+    }
+    next();
+  });
 
   // Приём заявок с формы и отправка в Telegram.
   // ВАЖНО: эндпоинт зарегистрирован ДО app.get("*"), иначе SPA-фолбэк перехватит /api/leads.
@@ -116,11 +131,22 @@ async function startServer() {
       ? path.resolve(__dirname, "public")
       : path.resolve(__dirname, "..", "dist", "public");
 
-  app.use(express.static(staticPath));
+  for (const pathname of Object.keys(SITE_PAGES)) {
+    app.get(pathname, (_req, res) => {
+      const file = pathname === "/" ? "index.html" : pathname.slice(1) + "/index.html";
+      res.sendFile(path.join(staticPath, file));
+    });
+  }
 
-  // Handle client-side routing - serve index.html for all routes
+  app.get(["/404", "/404.html"], (_req, res) => {
+    res.status(404).sendFile(path.join(staticPath, "404.html"));
+  });
+
+  app.use(express.static(staticPath, { index: false, redirect: false }));
+
+  // Unknown pages and missing assets must not masquerade as successful pages.
   app.get("*", (_req, res) => {
-    res.sendFile(path.join(staticPath, "index.html"));
+    res.status(404).sendFile(path.join(staticPath, "404.html"));
   });
 
   const port = process.env.PORT || 3000;

@@ -9,6 +9,7 @@ import About from "./pages/About";
 import Services from "./pages/Services";
 import ServicesAvtovozy from "./pages/ServicesAvtovozy";
 import Contacts from "./pages/Contacts";
+import SeoMetadata from "./components/SeoMetadata";
 
 function Router() {
   return (
@@ -31,6 +32,7 @@ function App() {
       <ThemeProvider defaultTheme="dark">
         <TooltipProvider>
           <Toaster />
+          <SeoMetadata />
           <Router />
         </TooltipProvider>
       </ThemeProvider>

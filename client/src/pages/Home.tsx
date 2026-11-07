@@ -33,7 +33,7 @@ function useInView(threshold = 0.15) {
 // Animated counter
 function CountUp({ target, suffix = "" }: { target: string; suffix?: string }) {
   const { ref, inView } = useInView(0.3);
-  const [display, setDisplay] = useState("0");
+  const [display, setDisplay] = useState(target.replace(/\+$/, ""));
   useEffect(() => {
     if (!inView) return;
     const num = parseInt(target.replace(/\D/g, ""));
@@ -48,7 +48,7 @@ function CountUp({ target, suffix = "" }: { target: string; suffix?: string }) {
     }, duration / steps);
     return () => clearInterval(timer);
   }, [inView, target]);
-  return <span ref={ref}>{inView ? display + (target.includes("+") ? "+" : "") + suffix : "0" + (target.includes("+") ? "+" : "") + suffix}</span>;
+  return <span ref={ref}>{inView ? display + (target.includes("+") ? "+" : "") + suffix : target + suffix}</span>;
 }
 
 const serviceIcons: Record<string, React.ReactNode> = {

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://technologistika.online/sitemap.xml
+Sitemap: https://xn--c1adkkjgb0abiz.xn--p1ai/sitemap.xml
