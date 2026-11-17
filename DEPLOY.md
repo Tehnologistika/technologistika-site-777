@@ -1,5 +1,9 @@
 # Деплой на Ubuntu 24.04
 
+> Заявки с персональными данными с этой версии пишутся в SQLite на том же сервере.
+> Переменные, флаг `--experimental-sqlite` и порядок выкладки — в [DEPLOY-PDN.md](./DEPLOY-PDN.md).
+> Этот файл описывает сервер и nginx. Не выкладывайте сайт, пока не прочитаете DEPLOY-PDN.md.
+
 Инструкция по развёртыванию сайта **ТехноЛогистика** на чистом сервере Ubuntu 24.04 LTS.
 
 Схема:
@@ -93,7 +97,7 @@ After=network.target
 Type=simple
 WorkingDirectory=/var/www/technologistika-site
 EnvironmentFile=/var/www/technologistika-site/.env
-ExecStart=/usr/bin/node dist/index.js
+ExecStart=/usr/bin/node --experimental-sqlite dist/index.js
 Restart=always
 RestartSec=5
 User=www-data

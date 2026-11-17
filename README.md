@@ -85,8 +85,14 @@ cp .env.example .env
 | `PORT`         | Порт Express-сервера                         | `3000`                         |
 | `SITE_DOMAIN`  | Основной домен сайта                         | `технологист.рф`               |
 | `AYUB_API_URL` | Адрес внешнего API (поддомен `ayub`)         | `https://ayub.технологист.рф`  |
-| `TELEGRAM_BOT_TOKEN`     | Токен Telegram-бота для отправки заявок с формы | `123456:ABC-DEF...`        |
-| `TELEGRAM_LEADS_CHAT_ID` | ID чата/группы, куда приходят заявки            | `-1001234567890`           |
+| `LEADS_DB_PATH`          | Файл SQLite с заявками на этом сервере          | `./data/leads.sqlite`      |
+| `LEADS_RETENTION_DAYS`   | Срок хранения заявок, дни                       | `183`                      |
+| `ADMIN_TOKEN`            | Доступ к `/admin`                               | длинная случайная строка   |
+| `TELEGRAM_NOTIFY`        | Сигнал в Telegram без персональных данных       | `false`                    |
+| `TELEGRAM_BOT_TOKEN`     | Токен бота, только если сигнал включён          | пусто                      |
+| `TELEGRAM_LEADS_CHAT_ID` | Чат для сигнала «Новая заявка №T-0001…»         | пусто                      |
+
+Заявка сначала записывается в базу. В Telegram, и только при `TELEGRAM_NOTIFY=true`, уходит номер заявки без имени, телефона, маршрута и комментария. Подробности выкладки — [DEPLOY-PDN.md](./DEPLOY-PDN.md).
 
 ## Деплой
 
