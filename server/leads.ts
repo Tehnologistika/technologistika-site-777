@@ -32,7 +32,9 @@ export interface StoredLead extends LeadInput {
 }
 
 export function consentTextSha256(): string {
-  return createHash("sha256").update(PDN.consentCheckboxText, "utf8").digest("hex");
+  return createHash("sha256")
+    .update(PDN.consentCheckboxText, "utf8")
+    .digest("hex");
 }
 
 export function defaultDbPath(): string {
@@ -80,13 +82,19 @@ function limit(value: string, max: number): string {
   return value.length > max ? value.slice(0, max) : value;
 }
 
-export function parseLeadBody(body: unknown): { ok: true; lead: LeadInput } | { ok: false; status: number; error: string } {
-  const data = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
+export function parseLeadBody(
+  body: unknown
+):
+  | { ok: true; lead: LeadInput }
+  | { ok: false; status: number; error: string } {
+  const data =
+    body && typeof body === "object" ? (body as Record<string, unknown>) : {};
   if (data.consent !== true) {
     return {
       ok: false,
       status: 400,
-      error: "Чтобы отправить заявку, отметьте согласие на обработку персональных данных.",
+      error:
+        "Чтобы отправить заявку, отметьте согласие на обработку персональных данных.",
     };
   }
   if (data.consentTextVersion !== PDN.consentCheckboxVersion) {
@@ -123,7 +131,10 @@ export function parseLeadBody(body: unknown): { ok: true; lead: LeadInput } | { 
   }
   if (readyDateRaw) {
     const parsed = new Date(`${readyDateRaw}T00:00:00Z`);
-    if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== readyDateRaw) {
+    if (
+      Number.isNaN(parsed.getTime()) ||
+      parsed.toISOString().slice(0, 10) !== readyDateRaw
+    ) {
       return { ok: false, status: 400, error: "Не удалось отправить заявку" };
     }
   }
@@ -144,7 +155,11 @@ export function parseLeadBody(body: unknown): { ok: true; lead: LeadInput } | { 
   };
 }
 
-export function saveLead(db: DatabaseSync, lead: LeadInput, now = new Date()): string {
+export function saveLead(
+  db: DatabaseSync,
+  lead: LeadInput,
+  now = new Date()
+): string {
   const createdAt = now.toISOString();
   const insert = db.prepare(`
     INSERT INTO leads (
@@ -177,7 +192,7 @@ export function saveLead(db: DatabaseSync, lead: LeadInput, now = new Date()): s
       PDN.policyVersion,
       PDN.cookiePolicyVersion,
       consentTextSha256(),
-      createdAt,
+      createdAt
     );
     const id = Number(result.lastInsertRowid);
     const publicId = `T-${String(id).padStart(4, "0")}`;
@@ -194,9 +209,17 @@ export function saveLead(db: DatabaseSync, lead: LeadInput, now = new Date()): s
   }
 }
 
-export function purgeExpired(db: DatabaseSync, retentionDays: number, now = new Date()): number {
-  const cutoff = new Date(now.getTime() - retentionDays * 24 * 60 * 60 * 1000).toISOString();
-  const result = db.prepare("DELETE FROM leads WHERE created_at < ?").run(cutoff);
+export function purgeExpired(
+  db: DatabaseSync,
+  retentionDays: number,
+  now = new Date()
+): number {
+  const cutoff = new Date(
+    now.getTime() - retentionDays * 24 * 60 * 60 * 1000
+  ).toISOString();
+  const result = db
+    .prepare("DELETE FROM leads WHERE created_at < ?")
+    .run(cutoff);
   return Number(result.changes);
 }
 
@@ -206,7 +229,10 @@ export function retentionDaysFromEnv(raw: string | undefined): number {
   return Math.floor(parsed);
 }
 
-export function scheduleRetention(db: DatabaseSync, retentionDays: number): NodeJS.Timeout {
+export function scheduleRetention(
+  db: DatabaseSync,
+  retentionDays: number
+): NodeJS.Timeout {
   const run = () => {
     try {
       const removed = purgeExpired(db, retentionDays);
@@ -243,6 +269,62 @@ interface LeadRow {
   created_at: string;
 }
 
+export function deleteLead(db: DatabaseSync, publicId: string): boolean {
+  if (!/^T-\d+$/.test(publicId)) return false;
+  const result = db
+    .prepare("DELETE FROM leads WHERE public_id = ?")
+    .run(publicId);
+  return Number(result.changes) > 0;
+}
+
+function csvCell(value: string | null): string {
+  const text = value ?? "";
+  if (/[",\r\n]/.test(text)) return `"${text.replaceAll('"', '""')}"`;
+  return text;
+}
+
+/** Выгрузка для владельца. Те же поля, что в списке, без текста согласия целиком. */
+export function leadsToCsv(leads: StoredLead[]): string {
+  const header = [
+    "publicId",
+    "createdAt",
+    "name",
+    "phone",
+    "from",
+    "to",
+    "carModel",
+    "carYear",
+    "driveStatus",
+    "readyDate",
+    "comment",
+    "consentAt",
+    "consentTextVersion",
+  ];
+  const lines = [header.join(",")];
+  for (const lead of leads) {
+    lines.push(
+      [
+        lead.publicId,
+        lead.createdAt,
+        lead.name,
+        lead.phone,
+        lead.from,
+        lead.to,
+        lead.carModel,
+        lead.carYear,
+        lead.driveStatus,
+        lead.readyDate,
+        lead.comment,
+        lead.consentAt,
+        lead.consentTextVersion,
+      ]
+        .map(csvCell)
+        .join(",")
+    );
+  }
+  return `\uFEFF${lines.join("\r\n")}\r\n`;
+}
+
 export function listLeads(db: DatabaseSync, limit = 500): StoredLead[] {
   const rows = db
     .prepare(
@@ -251,11 +333,11 @@ export function listLeads(db: DatabaseSync, limit = 500): StoredLead[] {
               consent_doc_version, policy_version, cookie_policy_version, consent_text_sha256, created_at
        FROM leads
        ORDER BY id DESC
-       LIMIT ?`,
+       LIMIT ?`
     )
     .all(limit) as unknown as LeadRow[];
 
-  return rows.map((row) => ({
+  return rows.map(row => ({
     id: row.id,
     publicId: row.public_id,
     from: row.from_city,
@@ -302,7 +384,7 @@ export function telegramEnabled(env: NodeJS.ProcessEnv): boolean {
 export async function notifyTelegram(
   publicId: string,
   env: NodeJS.ProcessEnv,
-  fetchImpl: typeof fetch = fetch,
+  fetchImpl: typeof fetch = fetch
 ): Promise<"sent" | "skipped" | "failed"> {
   if (!telegramEnabled(env)) return "skipped";
   const token = (env.TELEGRAM_BOT_TOKEN ?? "").trim();
@@ -315,15 +397,18 @@ export async function notifyTelegram(
 
   const text = `Новая заявка №${publicId}, откройте админку`;
   try {
-    const response = await fetchImpl(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text,
-        disable_web_page_preview: true,
-      }),
-    });
+    const response = await fetchImpl(
+      `https://api.telegram.org/bot${token}/sendMessage`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text,
+          disable_web_page_preview: true,
+        }),
+      }
+    );
     if (!response.ok) {
       console.error("Telegram signal failed with status", response.status);
       return "failed";

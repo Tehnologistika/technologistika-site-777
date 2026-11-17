@@ -1,8 +1,10 @@
 # Выкладка: заявки и 152-ФЗ
 
-Этот файл описывает, как включить приём заявок после изменений по персональным данным.
+Этот файл описывает, как включить приём заявок после изменений по персональным данным
+и как запускать процесс не от root.
 Сайт и базу нужно поднимать на сервере в Российской Федерации (сейчас это VPS Selectel в Москве).
 **Отсюда ничего не выкладывается.** Секреты в репозиторий не класть и в логи не печатать.
+Скрипты `scripts/deploy.sh` и `scripts/rollback.sh` запускает человек на сервере, не агент.
 
 ## Что меняется
 
@@ -11,9 +13,9 @@
 3. Запись старше `LEADS_RETENTION_DAYS` (по умолчанию 183 дня) удаляется из этой базы при старте и далее раз в сутки.
 4. Telegram необязателен. Если `TELEGRAM_NOTIFY` не включён, запрос к api.telegram.org не выполняется.
 5. Если сигнал включён, после успешной записи уходит только текст `Новая заявка №T-0001, откройте админку`. Имени, телефона, маршрута и комментария в нём нет. Сбой Telegram не отменяет уже сохранённую заявку.
-6. Список заявок: `https://технологист.рф/admin`. Токен вводится в форму и в браузере не сохраняется.
+6. Список заявок: `https://технологист.рф/admin`. Вход по личной учётной записи: пароль (scrypt) и одноразовый код из Яндекс Ключа или Google Authenticator. Сессия — cookie `HttpOnly`, `Secure`, `SameSite=Strict` на 12 часов. Общий `ADMIN_TOKEN` по умолчанию не действует.
 
-Резервные копии файла базы хранить не дольше 30 дней и только на территории Российской Федерации. Это требование политики, его не делает код.
+Резервные копии файла базы хранить не дольше 30 дней и только на территории Российской Федерации. Это требование политики, его не делает код. В файле базы лежат заявки, хеши паролей и секреты TOTP. Права на файл — только у пользователя сервиса.
 
 ## Переменные окружения
 
@@ -21,14 +23,24 @@
 
 | Переменная | Обязательна | Назначение |
 | --- | --- | --- |
-| `LEADS_DB_PATH` | нет | Путь к файлу SQLite. По умолчанию `./data/leads.sqlite` от рабочей директории сервиса |
+| `LEADS_DB_PATH` | нет | Путь к файлу SQLite. По умолчанию `./data/leads.sqlite` от рабочей директории сервиса. Каталог должен попадать в `ReadWritePaths` unit-файла |
 | `LEADS_RETENTION_DAYS` | нет | Срок хранения в днях, по умолчанию 183. Допустимо 1–366 |
-| `ADMIN_TOKEN` | да, чтобы открыть админку | Секрет для `GET /api/admin/leads`. Пока пусто, `/admin` открывается, а список отвечает 503 |
+| `ADMIN_LEGACY_TOKEN` | нет | Только `true` включает старый общий токен. Любое другое значение, включая пустое и `false`, — выключено |
+| `ADMIN_TOKEN` | нет | Секрет старого Bearer. Читается только при `ADMIN_LEGACY_TOKEN=true` и только для просмотра списка |
 | `TELEGRAM_NOTIFY` | нет | `true`, `1` или `yes` включает сигнал. Любое другое значение, включая пустое, — выключено |
 | `TELEGRAM_BOT_TOKEN` | только при сигнале | Токен бота. В текст сообщения не подставляется |
 | `TELEGRAM_LEADS_CHAT_ID` | только при сигнале | Чат, куда уходит номер заявки |
+| `PORT` | нет | Порт Express. Оставляйте `3000` |
+| `SITE_DOMAIN` | нет | Домен в одноразовой ссылке настройки, например `технологист.рф` |
 
-`NODE_ENV=production` и `PORT` остаются как в [DEPLOY.md](./DEPLOY.md).
+`NODE_ENV=production` остаётся как в [DEPLOY.md](./DEPLOY.md).
+
+## Роли
+
+- **Владелец** смотрит заявки, удаляет, выгружает CSV и создаёт или отключает учётные записи владельцев и сотрудников.
+- **Сотрудник** только смотрит заявки. Удаление, выгрузка и раздел пользователей ему недоступны.
+- Пароль задаёт сам человек на странице `/admin/setup`. Команда на сервере пароль не принимает и не печатает.
+- Неудачные входы ограничиваются: 5 ошибок подряд блокируют учётную запись на 15 минут, с одного адреса — не больше 30 попыток за 15 минут. В журнал пишется время по Москве, логин и хеш IP, не сам адрес.
 
 ## Node.js
 
@@ -45,30 +57,104 @@ node --experimental-sqlite dist/index.js
 ExecStart=/usr/bin/node --experimental-sqlite dist/index.js
 ```
 
-Без флага процесс не поднимет базу и не примет заявку.
+Без флага процесс не поднимет базу и не примет заявку. Порт в `.env` — `3000`.
 
-## Порядок на сервере
+## Пользователь сервиса и unit
 
-Команды ниже — для человека, который выкладывает сайт. Агент их не выполняет.
+Процесс не запускается от root. Ниже команды для человека на сервере.
 
 ```bash
-cd /var/www/technologistika-site
-git pull
-pnpm install --frozen-lockfile
-pnpm build
+sudo useradd --system --user-group --home-dir /var/www/technologistika-site \
+  --shell /usr/sbin/nologin --comment "Technologistika site" technologistika
 
-# каталог базы должен быть доступен пользователю сервиса на запись
 sudo mkdir -p /var/www/technologistika-site/data
-sudo chown -R www-data:www-data /var/www/technologistika-site
+sudo chown -R root:technologistika /var/www/technologistika-site
+sudo find /var/www/technologistika-site -type d -exec chmod 0750 {} +
+sudo find /var/www/technologistika-site -type f -exec chmod 0640 {} +
+sudo chown technologistika:technologistika /var/www/technologistika-site/data
+sudo chmod 0750 /var/www/technologistika-site/data
 
 # .env уже лежит на сервере и не приезжает из git.
-# Проверьте LEADS_DB_PATH, ADMIN_TOKEN и TELEGRAM_NOTIFY, не печатая секреты в общий лог:
-sudo systemctl restart technologistika
+sudo chown root:technologistika /var/www/technologistika-site/.env
+sudo chmod 0640 /var/www/technologistika-site/.env
+
+sudo cp /var/www/technologistika-site/deploy/technologistika.service /etc/systemd/system/technologistika.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now technologistika
 sudo systemctl status technologistika --no-pager
 ```
 
-Nginx из [DEPLOY.md](./DEPLOY.md) проксирует весь сайт на Express, отдельные `location` для `/api/leads` и `/admin` не нужны.
-Проверьте, что запросы доходят до Node, а не отдаются как файл.
+Если пользователь уже есть, `useradd` повторно не запускайте. Каталог `data` должен существовать до старта: `ProtectSystem=strict` не создаст его сам, а писать процесс может только туда.
+
+Пример unit (он же `deploy/technologistika.service`):
+
+```ini
+[Unit]
+Description=Technologistika site (Express)
+After=network.target
+
+[Service]
+Type=simple
+User=technologistika
+Group=technologistika
+WorkingDirectory=/var/www/technologistika-site
+EnvironmentFile=/var/www/technologistika-site/.env
+Environment=HOME=/tmp
+ExecStart=/usr/bin/node --experimental-sqlite dist/index.js
+Restart=always
+RestartSec=5
+UMask=0027
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/www/technologistika-site/data
+
+[Install]
+WantedBy=multi-user.target
+```
+
+`PORT=3000` берётся из `.env`. Nginx из [DEPLOY.md](./DEPLOY.md) по-прежнему проксирует сайт на `127.0.0.1:3000`. Отдельные `location` для `/api/leads` и `/admin` не нужны.
+
+## Первый владелец
+
+После того как сервис поднялся и база создалась в `data/`:
+
+```bash
+cd /var/www/technologistika-site
+sudo -u technologistika node --experimental-sqlite dist/admin-cli.js create-owner ivan
+```
+
+Команда печатает одноразовую ссылку вида `https://технологист.рф/admin/setup#code=…` и сам код. Их передают владельцу по доверенному каналу, не в общий чат. Ссылка живёт 24 часа. Владелец сам задаёт пароль (от 12 до 128 символов) и подтверждает код из приложения. Пока настройка не закончена, этим логином войти нельзя.
+
+Если человек ещё не завершил настройку, ту же команду можно запустить снова: старая ссылка погаснет, пароль по-прежнему не задаётся скриптом. Если учётная запись уже активна, команда ничего не меняет.
+
+Дальше владельцы создают сотрудников и других владельцев в разделе «Пользователи». Отключить самого себя или последнего активного владельца нельзя.
+
+`ADMIN_LEGACY_TOKEN` оставляйте `false`. Включайте `true` только на короткий переход, если список ещё нужно открыть старым Bearer. В этом режиме токен не удаляет заявки, не выгружает их и не управляет людьми.
+
+## Скрипт выкладки и отката
+
+Оба скрипта рассчитаны на каталог `/var/www/technologistika-site` и unit `technologistika`. Они не печатают `.env` и не придумывают пароль.
+
+Выкладка указанной ревизии (ветка или SHA, которые уже есть на `origin`):
+
+```bash
+cd /var/www/technologistika-site
+sudo bash scripts/deploy.sh origin/cursor/admin-accounts-totp-e384
+```
+
+Скрипт создаёт системного пользователя, если его ещё нет, сохраняет предыдущий `dist`, unit и копию базы в `/var/backups/technologistika/<дата>` с правами только для root, собирает проект, выставляет права и перезапускает сервис. Копию базы из этого каталога удаляют не позже чем через 30 дней.
+
+Откат кода к предыдущей выкладке (базу заявок не трогает):
+
+```bash
+sudo bash scripts/rollback.sh
+```
+
+Каталог отката можно передать явно: `sudo bash scripts/rollback.sh /var/backups/technologistika/<дата>`. Флаг `--with-db` возвращает и файл базы; это затирает заявки и учётки, появившиеся после снимка, поэтому без нужды его не используют.
+
+После отката на ревизию со старым общим токеном снова нужен `ADMIN_TOKEN` в `.env`, как в той ревизии. Новые таблицы в SQLite старый код не мешают.
 
 ## Проверка после выкладки
 
@@ -76,9 +162,11 @@ Nginx из [DEPLOY.md](./DEPLOY.md) проксирует весь сайт на 
 
 1. Откройте главную, прокрутите до формы. Кнопка отправки неактивна, пока не отмечено согласие.
 2. Отправьте заявку. В ответе `{"ok":true}`. В Telegram при `TELEGRAM_NOTIFY=false` ничего не приходит.
-3. Откройте `/admin`, введите `ADMIN_TOKEN`, убедитесь, что строка есть и в ней есть время согласия.
-4. Если включаете сигнал, поставьте `TELEGRAM_NOTIFY=true`, перезапустите сервис и отправьте ещё одну заявку. В чате должна быть только фраза с номером `T-….`.
-5. В браузере на чистом профиле во вкладке «Сеть» не должно быть запросов к `fonts.googleapis.com`, `fonts.gstatic.com`, `cloudfront.net` и `api.telegram.org` при открытии страницы. `api.telegram.org` допустим только на сервере и только после записи в базу, если сигнал включён.
+3. Откройте ссылку настройки владельца, задайте пароль и код приложения. В `/admin` должна быть строка заявки и время согласия по Москве.
+4. Учётная запись сотрудника открывает тот же список и не показывает удаление и выгрузку. Запрос удаления от её cookie отвечает отказом.
+5. Если включаете сигнал, поставьте `TELEGRAM_NOTIFY=true`, перезапустите сервис и отправьте ещё одну заявку. В чате должна быть только фраза с номером `T-….`.
+6. В браузере на чистом профиле во вкладке «Сеть» не должно быть запросов к `fonts.googleapis.com`, `fonts.gstatic.com`, `cloudfront.net` и `api.telegram.org` при открытии страницы. `api.telegram.org` допустим только на сервере и только после записи в базу, если сигнал включён.
+7. `systemctl show technologistika -p User -p Group` показывает `technologistika`, не `root`.
 
 Файл базы содержит персональные данные. Не копируйте его в тикет, чат и git.
 

@@ -82,39 +82,7 @@ pnpm build
 
 ## 7. Запуск сервера через systemd
 
-Создайте unit-файл:
-
-```bash
-sudo nano /etc/systemd/system/technologistika.service
-```
-
-```ini
-[Unit]
-Description=Technologistika site (Express)
-After=network.target
-
-[Service]
-Type=simple
-WorkingDirectory=/var/www/technologistika-site
-EnvironmentFile=/var/www/technologistika-site/.env
-ExecStart=/usr/bin/node --experimental-sqlite dist/index.js
-Restart=always
-RestartSec=5
-User=www-data
-Group=www-data
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Дайте права пользователю `www-data` на каталог и запустите сервис:
-
-```bash
-sudo chown -R www-data:www-data /var/www/technologistika-site
-sudo systemctl daemon-reload
-sudo systemctl enable --now technologistika
-sudo systemctl status technologistika
-```
+Процесс слушает порт **3000** и не работает от root. Системный пользователь `technologistika`, права на `.env` и каталог базы, unit и скрипты выкладки — в [DEPLOY-PDN.md](./DEPLOY-PDN.md). Не копируйте старый unit с `User=www-data` и не оставляйте сервис под root.
 
 Проверьте, что сервер отвечает локально:
 
@@ -249,10 +217,4 @@ sudo tail -f /var/log/nginx/error.log
 
 ## 13. Обновление сайта (redeploy)
 
-```bash
-cd /var/www/technologistika-site
-git pull
-pnpm install --frozen-lockfile
-pnpm build
-sudo systemctl restart technologistika
-```
+Повторная выкладка и откат — скриптами из [DEPLOY-PDN.md](./DEPLOY-PDN.md): `sudo bash scripts/deploy.sh <git-ref>` и `sudo bash scripts/rollback.sh`. Порт остаётся 3000. Скрипты не печатают секреты и не задают пароль владельца.
