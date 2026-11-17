@@ -395,7 +395,7 @@ export default function Calculator() {
             type="submit"
             className="btn-primary"
             disabled={submitting || !consent}
-            style={{ width: "100%", justifyContent: "center", opacity: submitting || !consent ? 0.55 : 1 }}
+            style={{ width: "100%", justifyContent: "center" }}
           >
             {submitting ? (
               <>
