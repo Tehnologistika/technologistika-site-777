@@ -8,6 +8,7 @@ import { ArrowRight, Truck, Users, MapPin, Shield, Phone, Route, ShieldCheck, Fi
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { CONTACTS } from "@/lib/constants";
+import { PHOTOS } from "@/lib/photos";
 
 function useInView(threshold = 0.15) {
   const ref = useRef<HTMLDivElement>(null);
@@ -54,7 +55,7 @@ export default function About() {
           style={{
             position: "absolute",
             inset: 0,
-            backgroundImage: `url(https://d2xsxph8kpxj0f.cloudfront.net/310519663490180314/YbgXRCtSxpgqz345bJLVUX/about-section_4eb49a1e.jpg)`,
+            backgroundImage: `url(${PHOTOS.massif})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
             opacity: 0.2,
@@ -168,7 +169,7 @@ export default function About() {
           style={{
             position: "absolute",
             inset: 0,
-            backgroundImage: `url(https://d2xsxph8kpxj0f.cloudfront.net/310519663490180314/YbgXRCtSxpgqz345bJLVUX/elbrus-abstract_08197e27.jpg)`,
+            backgroundImage: `url(${PHOTOS.road})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
             opacity: 0.25,

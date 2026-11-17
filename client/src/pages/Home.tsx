@@ -11,6 +11,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Calculator from "@/components/Calculator";
 import { CONTACTS, STATS, SERVICES, ADVANTAGES, TESTIMONIALS } from "@/lib/constants";
+import { PHOTOS } from "@/lib/photos";
 import logoWatermark from "@/assets/technologistika-logo-transparent.png";
 
 // Intersection observer hook for scroll animations
@@ -107,7 +108,7 @@ export default function Home() {
           style={{
             position: "absolute",
             inset: 0,
-            backgroundImage: `url(https://d2xsxph8kpxj0f.cloudfront.net/310519663490180314/YbgXRCtSxpgqz345bJLVUX/hero-bg_0581fa2c.jpg)`,
+            backgroundImage: `url(${PHOTOS.hero})`,
             backgroundSize: "cover",
             backgroundPosition: "center 40%",
             backgroundRepeat: "no-repeat",
@@ -468,7 +469,7 @@ export default function Home() {
           style={{
             position: "absolute",
             inset: 0,
-            backgroundImage: `url(https://d2xsxph8kpxj0f.cloudfront.net/310519663490180314/YbgXRCtSxpgqz345bJLVUX/tech-section_7c55b084.jpg)`,
+            backgroundImage: `url(${PHOTOS.slope})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
             opacity: 0.18,
@@ -558,7 +559,7 @@ export default function Home() {
           style={{
             position: "absolute",
             inset: 0,
-            backgroundImage: `url(https://d2xsxph8kpxj0f.cloudfront.net/310519663490180314/YbgXRCtSxpgqz345bJLVUX/elbrus-abstract_08197e27.jpg)`,
+            backgroundImage: `url(${PHOTOS.massif})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
             opacity: 0.35,

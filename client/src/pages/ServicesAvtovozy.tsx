@@ -10,6 +10,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Calculator from "@/components/Calculator";
 import { CONTACTS } from "@/lib/constants";
+import { PHOTOS } from "@/lib/photos";
 
 function useInView(threshold = 0.15) {
   const ref = useRef<HTMLDivElement>(null);
@@ -76,7 +77,7 @@ export default function ServicesAvtovozy() {
           style={{
             position: "absolute",
             inset: 0,
-            backgroundImage: `url(https://d2xsxph8kpxj0f.cloudfront.net/310519663490180314/YbgXRCtSxpgqz345bJLVUX/services-avtovozy_3c7411ef.jpg)`,
+            backgroundImage: `url(${PHOTOS.slope})`,
             backgroundSize: "cover",
             backgroundPosition: "center 35%",
           }}

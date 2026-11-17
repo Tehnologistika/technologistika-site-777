@@ -100,10 +100,13 @@ jspm_packages/
 tmp/
 temp/
 
-# Database
+# Database — заявки с персональными данными не коммитить
 *.db
 *.sqlite
 *.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+data/
 
 # Webdev artifacts (checkpoint zips, migrations, etc.)
 .webdev/

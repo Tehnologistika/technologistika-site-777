@@ -5,7 +5,9 @@
  * Design: Editorial Swiss + Futuristic Alpine Industrial
  */
 import { useState } from "react";
+import { Link } from "wouter";
 import { CheckCircle, ArrowRight, Loader2 } from "lucide-react";
+import { PDN } from "@shared/pdn";
 
 type DriveStatus = "yes" | "no" | "uncertain";
 
@@ -86,6 +88,7 @@ export default function Calculator() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [consent, setConsent] = useState(false);
 
   const handleChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -108,8 +111,11 @@ export default function Calculator() {
     const newErrors = validateForm(formData);
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
+    if (!consent) {
+      setSubmitError("Чтобы отправить заявку, отметьте согласие на обработку персональных данных.");
+      return;
+    }
 
-    // Собранная заявка для отправки на бэкенд (POST /api/leads → Telegram).
     const leadData = {
       from: formData.from.trim(),
       to: formData.to.trim(),
@@ -120,6 +126,8 @@ export default function Calculator() {
       name: formData.name.trim(),
       phone: formData.phone.trim(),
       comment: formData.comment.trim() || null,
+      consent: true,
+      consentTextVersion: PDN.consentCheckboxVersion,
     };
 
     setSubmitError(null);
@@ -185,7 +193,7 @@ export default function Calculator() {
           </p>
         </div>
         <button
-          onClick={() => { setSuccess(false); setFormData(INITIAL_DATA); setTouched({}); setErrors({}); }}
+          onClick={() => { setSuccess(false); setFormData(INITIAL_DATA); setTouched({}); setErrors({}); setConsent(false); }}
           style={{
             color: "#4FD1FF",
             background: "none",
@@ -348,13 +356,46 @@ export default function Calculator() {
           />
         </div>
 
+        {/* Consent, directly above the submit button. Unticked by default. */}
+        <div style={{ gridColumn: "1 / -1" }}>
+          <label
+            htmlFor="pdn-consent"
+            style={{
+              display: "flex",
+              gap: "0.75rem",
+              alignItems: "flex-start",
+              color: "#C9D4E3",
+              fontSize: "0.875rem",
+              lineHeight: 1.55,
+              fontFamily: "'Inter', sans-serif",
+            }}
+          >
+            <input
+              id="pdn-consent"
+              type="checkbox"
+              checked={consent}
+              onChange={(event) => {
+                setConsent(event.target.checked);
+                if (event.target.checked) setSubmitError(null);
+              }}
+              style={{ marginTop: "0.2rem", width: "1.05rem", height: "1.05rem", flexShrink: 0, accentColor: "#4FD1FF" }}
+            />
+            <span>
+              Я даю согласие на обработку персональных данных на условиях{" "}
+              <Link href="/consent" style={{ color: "#4FD1FF" }}>Согласия</Link>
+              {" "}и{" "}
+              <Link href="/privacy" style={{ color: "#4FD1FF" }}>Политики обработки персональных данных</Link>
+            </span>
+          </label>
+        </div>
+
         {/* Submit */}
         <div style={{ gridColumn: "1 / -1", marginTop: "0.5rem" }}>
           <button
             type="submit"
             className="btn-primary"
-            disabled={submitting}
-            style={{ width: "100%", justifyContent: "center", opacity: submitting ? 0.8 : 1 }}
+            disabled={submitting || !consent}
+            style={{ width: "100%", justifyContent: "center", opacity: submitting || !consent ? 0.55 : 1 }}
           >
             {submitting ? (
               <>

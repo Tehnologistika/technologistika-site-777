@@ -20,6 +20,7 @@
  *   Mono/Label: Space Mono (weight 400–700)
  */
 
+@import "./fonts/fonts.css";
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -493,6 +494,52 @@
     background: rgba(79, 209, 255, 0.2);
     color: #F5F7FA;
   }
+
+  /* ─── Legal documents ─── */
+  .legal-doc {
+    max-width: 820px;
+    color: #C9D4E3;
+    font-size: 0.975rem;
+    line-height: 1.7;
+  }
+  .legal-doc h1,
+  .legal-doc h2,
+  .legal-doc h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    color: #F5F7FA;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+  }
+  .legal-doc h1 { font-size: clamp(1.6rem, 3vw, 2.15rem); margin: 0 0 1.25rem; }
+  .legal-doc h2 { font-size: 1.25rem; margin: 2rem 0 0.75rem; }
+  .legal-doc h3 { font-size: 1.05rem; margin: 1.5rem 0 0.5rem; }
+  .legal-doc p { margin: 0 0 0.9rem; }
+  .legal-doc ul { margin: 0 0 1rem; padding-left: 1.2rem; }
+  .legal-doc li { margin: 0.35rem 0; }
+  .legal-doc a { color: #4FD1FF; }
+  .legal-doc blockquote {
+    margin: 0 0 1.25rem;
+    padding: 0.85rem 1rem;
+    border-left: 3px solid #F5B74F;
+    background: rgba(245, 183, 79, 0.08);
+    color: #F5F7FA;
+  }
+  .legal-doc .legal-ph {
+    background: rgba(245, 183, 79, 0.22);
+    color: #F5B74F;
+    padding: 0 0.2em;
+    border-radius: 2px;
+  }
+  .legal-table-wrap { overflow-x: auto; margin: 0 0 1.25rem; }
+  .legal-doc table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  .legal-doc th,
+  .legal-doc td {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.55rem 0.65rem;
+    vertical-align: top;
+    text-align: left;
+  }
+  .legal-doc th { color: #F5F7FA; font-weight: 600; }
 
   /* ─── Topographic SVG background utility ─── */
   .topo-bg {

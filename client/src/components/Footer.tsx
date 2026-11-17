@@ -6,6 +6,7 @@
 import { Link } from "wouter";
 import { Phone, Mail, MapPin, Send } from "lucide-react";
 import { CONTACTS } from "@/lib/constants";
+import { openCookieSettings } from "@/lib/cookieConsent";
 
 export default function Footer() {
   return (
@@ -181,6 +182,40 @@ export default function Footer() {
       {/* Bottom bar */}
       <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="container py-5">
+          <nav
+            aria-label="Документы"
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "0.75rem 1.25rem",
+              marginBottom: "1rem",
+            }}
+          >
+            {[
+              { href: "/privacy", label: "Политика обработки персональных данных" },
+              { href: "/consent", label: "Согласие" },
+              { href: "/cookies", label: "Политика cookie" },
+            ].map((item) => (
+              <Link key={item.href} href={item.href}>
+                <span style={{ color: "#AAB3C2", fontSize: "0.8125rem", cursor: "pointer" }}>{item.label}</span>
+              </Link>
+            ))}
+            <button
+              type="button"
+              onClick={openCookieSettings}
+              style={{
+                background: "none",
+                border: "none",
+                padding: 0,
+                color: "#AAB3C2",
+                fontSize: "0.8125rem",
+                fontFamily: "inherit",
+                cursor: "pointer",
+              }}
+            >
+              Настройки cookie
+            </button>
+          </nav>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
             <p style={{ color: "#AAB3C2", fontSize: "0.8125rem" }}>
               © 2025 Technologistika. Все права защищены.
