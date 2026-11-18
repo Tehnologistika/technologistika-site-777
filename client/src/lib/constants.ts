@@ -12,14 +12,9 @@ export const CONTACTS = {
   phoneReserve: "+7 901 830-03-09",
   phoneReserveHref: "tel:+79018300309",
   phoneReserveLabel: "Резервная линия связи",
-  // Email для заявок и расчёта
-  email: "mail@technologistika.online",
-  emailHref: "mailto:mail@technologistika.online",
-  emailLabel: "Заявки и расчёт перевозки",
-  // Email для документов и закрывающих
-  emailDocs: "inbox@technologistika.online",
-  emailDocsHref: "mailto:inbox@technologistika.online",
-  emailDocsLabel: "Документы и закрывающие",
+  email: "Technologistika07@yandex.ru",
+  emailHref: "mailto:Technologistika07@yandex.ru",
+  emailLabel: "Электронная почта",
   address: "Москва, пер. Уланский, д. 22, стр. 1, помещ. 41Н",
   telegram: "https://t.me/technologistika",
   telegramHandle: "@technologistika",

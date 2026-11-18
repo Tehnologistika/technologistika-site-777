@@ -113,18 +113,9 @@ export default function Contacts() {
               </div>
               <a
                 href={CONTACTS.emailHref}
-                style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: "1rem", color: "#F5F7FA", textDecoration: "none", display: "block", marginBottom: "1rem" }}
-              >
-                {CONTACTS.email}
-              </a>
-              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: "0.6875rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "#AAB3C2", marginBottom: "0.5rem" }}>
-                {CONTACTS.emailDocsLabel}
-              </div>
-              <a
-                href={CONTACTS.emailDocsHref}
                 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: "1rem", color: "#F5F7FA", textDecoration: "none", display: "block", marginBottom: "0.75rem" }}
               >
-                {CONTACTS.emailDocs}
+                {CONTACTS.email}
               </a>
               <p style={{ color: "#AAB3C2", fontSize: "0.875rem" }}>
                 Ответим в течение нескольких часов в рабочее время
