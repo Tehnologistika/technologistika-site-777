@@ -4,7 +4,7 @@
  * Dark premium footer with full contact info
  */
 import { Link } from "wouter";
-import { Phone, Mail, MapPin, Send } from "lucide-react";
+import { Phone, Mail, MapPin } from "lucide-react";
 import { CONTACTS } from "@/lib/constants";
 import { openCookieSettings } from "@/lib/cookieConsent";
 
@@ -40,32 +40,9 @@ export default function Footer() {
                 </span>
               </div>
             </Link>
-            <p style={{ color: "#AAB3C2", fontSize: "0.875rem", lineHeight: 1.6, marginBottom: "1.5rem" }}>
+            <p style={{ color: "#AAB3C2", fontSize: "0.875rem", lineHeight: 1.6 }}>
               Профессиональная перевозка автомобилей по России и СНГ. Работаем с проверенными перевозчиками и подбираем автовоз под маршрут — сеть из более чем 30 партнёров-перевозчиков.
             </p>
-            <a
-              href={CONTACTS.telegram}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                padding: "0.625rem 1rem",
-                backgroundColor: "rgba(79, 209, 255, 0.1)",
-                border: "1px solid rgba(79, 209, 255, 0.2)",
-                borderRadius: "0.25rem",
-                color: "#4FD1FF",
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontWeight: 600,
-                fontSize: "0.875rem",
-                textDecoration: "none",
-                transition: "all 0.2s ease",
-              }}
-            >
-              <Send size={14} />
-              Написать в Telegram
-            </a>
           </div>
 
           {/* Services column */}

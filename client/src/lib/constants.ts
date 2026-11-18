@@ -16,8 +16,6 @@ export const CONTACTS = {
   emailHref: "mailto:Technologistika07@yandex.ru",
   emailLabel: "Электронная почта",
   address: "Москва, пер. Уланский, д. 22, стр. 1, помещ. 41Н",
-  telegram: "https://t.me/technologistika",
-  telegramHandle: "@technologistika",
   whatsapp: "https://wa.me/79931572218",
 };
 

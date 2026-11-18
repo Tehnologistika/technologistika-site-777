@@ -6,7 +6,7 @@
 import { useEffect, useRef, useState } from "react";
 import IntroSplash, { shouldShowIntro } from "@/components/IntroSplash";
 import { Link } from "wouter";
-import { ArrowRight, Shield, Clock, MapPin, Truck, Globe, Building2, Network, FileText, Send, ChevronRight, Star, Phone } from "lucide-react";
+import { ArrowRight, Shield, Clock, MapPin, Truck, Globe, Building2, Network, FileText, ChevronRight, Star, Phone } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Calculator from "@/components/Calculator";
@@ -218,12 +218,6 @@ export default function Home() {
                 <button className="btn-primary">
                   Рассчитать ориентировочно
                   <ArrowRight size={16} />
-                </button>
-              </a>
-              <a href={CONTACTS.telegram} target="_blank" rel="noopener noreferrer">
-                <button className="btn-secondary">
-                  <Send size={15} />
-                  Написать в Telegram
                 </button>
               </a>
             </div>

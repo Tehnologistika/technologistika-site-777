@@ -5,7 +5,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
-import { ArrowRight, Truck, Shield, Clock, MapPin, CheckCircle, Phone, Send } from "lucide-react";
+import { ArrowRight, Truck, Shield, Clock, MapPin, CheckCircle, Phone } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Calculator from "@/components/Calculator";
@@ -118,12 +118,6 @@ export default function ServicesAvtovozy() {
                 <button className="btn-primary">
                   Рассчитать ориентировочно
                   <ArrowRight size={16} />
-                </button>
-              </a>
-              <a href={CONTACTS.telegram} target="_blank" rel="noopener noreferrer">
-                <button className="btn-secondary">
-                  <Send size={15} />
-                  Написать в Telegram
                 </button>
               </a>
             </div>
