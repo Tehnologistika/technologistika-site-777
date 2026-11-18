@@ -87,12 +87,15 @@ cp .env.example .env
 | `AYUB_API_URL` | Адрес внешнего API (поддомен `ayub`)         | `https://ayub.технологист.рф`  |
 | `LEADS_DB_PATH`          | Файл SQLite с заявками на этом сервере          | `./data/leads.sqlite`      |
 | `LEADS_RETENTION_DAYS`   | Срок хранения заявок, дни                       | `183`                      |
-| `ADMIN_TOKEN`            | Доступ к `/admin`                               | длинная случайная строка   |
+| `AUDIT_RETENTION_DAYS`   | Срок хранения журнала админки, дни              | `365`                      |
+| `AUDIT_IP_PEPPER`        | Секрет HMAC для хеша IP в журнале               | длинная случайная строка   |
+| `ADMIN_LEGACY_TOKEN`     | Переходный общий токен, по умолчанию выключен   | `false`                    |
+| `ADMIN_TOKEN`            | Bearer только при `ADMIN_LEGACY_TOKEN=true`     | пусто                      |
 | `TELEGRAM_NOTIFY`        | Сигнал в Telegram без персональных данных       | `false`                    |
 | `TELEGRAM_BOT_TOKEN`     | Токен бота, только если сигнал включён          | пусто                      |
 | `TELEGRAM_LEADS_CHAT_ID` | Чат для сигнала «Новая заявка №T-0001…»         | пусто                      |
 
-Заявка сначала записывается в базу. В Telegram, и только при `TELEGRAM_NOTIFY=true`, уходит номер заявки без имени, телефона, маршрута и комментария. Подробности выкладки — [DEPLOY-PDN.md](./DEPLOY-PDN.md).
+Заявка сначала записывается в базу. В Telegram, и только при `TELEGRAM_NOTIFY=true`, уходит номер заявки без имени, телефона, маршрута и комментария. Список заявок открывается личной учётной записью на `/admin` (пароль и одноразовый код). Первого владельца создают на сервере: `node --experimental-sqlite dist/admin-cli.js create-owner <login>`. Подробности выкладки — [DEPLOY-PDN.md](./DEPLOY-PDN.md).
 
 ## Деплой
 

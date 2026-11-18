@@ -3,7 +3,7 @@
  * Design: Editorial Swiss + Futuristic Alpine Industrial
  */
 import { useEffect, useRef, useState } from "react";
-import { Phone, Mail, MapPin, Send, Clock, MessageSquare } from "lucide-react";
+import { Phone, Mail, MapPin, Clock, MessageSquare } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Calculator from "@/components/Calculator";
@@ -67,16 +67,15 @@ export default function Contacts() {
             ref={contactsSection.ref}
             style={{
               display: "grid",
-              gridTemplateColumns: "1fr",
               gap: "1.5rem",
               opacity: contactsSection.inView ? 1 : 0,
               transform: contactsSection.inView ? "translateY(0)" : "translateY(24px)",
               transition: "all 0.6s ease-out",
             }}
-            className="sm:grid-cols-2 lg:grid-cols-3"
+            className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-6"
           >
             {/* Phone */}
-            <div style={{ padding: "2rem", backgroundColor: "#161A20", border: "1px solid rgba(79, 209, 255, 0.15)", borderRadius: "0.5rem" }}>
+            <div className="lg:col-span-2" style={{ padding: "2rem", backgroundColor: "#161A20", border: "1px solid rgba(79, 209, 255, 0.15)", borderRadius: "0.5rem" }}>
               <div style={{ width: "44px", height: "44px", borderRadius: "0.375rem", backgroundColor: "rgba(79, 209, 255, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1.25rem" }}>
                 <Phone size={20} style={{ color: "#4FD1FF" }} />
               </div>
@@ -104,7 +103,7 @@ export default function Contacts() {
             </div>
 
             {/* Email */}
-            <div style={{ padding: "2rem", backgroundColor: "#161A20", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "0.5rem" }}>
+            <div className="lg:col-span-2" style={{ padding: "2rem", backgroundColor: "#161A20", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "0.5rem" }}>
               <div style={{ width: "44px", height: "44px", borderRadius: "0.375rem", backgroundColor: "rgba(79, 209, 255, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1.25rem" }}>
                 <Mail size={20} style={{ color: "#4FD1FF" }} />
               </div>
@@ -113,47 +112,17 @@ export default function Contacts() {
               </div>
               <a
                 href={CONTACTS.emailHref}
-                style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: "1rem", color: "#F5F7FA", textDecoration: "none", display: "block", marginBottom: "1rem" }}
-              >
-                {CONTACTS.email}
-              </a>
-              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: "0.6875rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "#AAB3C2", marginBottom: "0.5rem" }}>
-                {CONTACTS.emailDocsLabel}
-              </div>
-              <a
-                href={CONTACTS.emailDocsHref}
                 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: "1rem", color: "#F5F7FA", textDecoration: "none", display: "block", marginBottom: "0.75rem" }}
               >
-                {CONTACTS.emailDocs}
+                {CONTACTS.email}
               </a>
               <p style={{ color: "#AAB3C2", fontSize: "0.875rem" }}>
                 Ответим в течение нескольких часов в рабочее время
               </p>
             </div>
 
-            {/* Telegram */}
-            <div style={{ padding: "2rem", backgroundColor: "#161A20", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "0.5rem" }}>
-              <div style={{ width: "44px", height: "44px", borderRadius: "0.375rem", backgroundColor: "rgba(79, 209, 255, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1.25rem" }}>
-                <Send size={20} style={{ color: "#4FD1FF" }} />
-              </div>
-              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: "0.6875rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "#AAB3C2", marginBottom: "0.5rem" }}>
-                Telegram
-              </div>
-              <a
-                href={CONTACTS.telegram}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600, fontSize: "1rem", color: "#4FD1FF", textDecoration: "none", display: "block", marginBottom: "0.5rem" }}
-              >
-                {CONTACTS.telegramHandle}
-              </a>
-              <p style={{ color: "#AAB3C2", fontSize: "0.875rem" }}>
-                Быстрый ответ в мессенджере — удобно для заявок
-              </p>
-            </div>
-
             {/* WhatsApp */}
-            <div style={{ padding: "2rem", backgroundColor: "#161A20", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "0.5rem" }}>
+            <div className="lg:col-span-2" style={{ padding: "2rem", backgroundColor: "#161A20", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "0.5rem" }}>
               <div style={{ width: "44px", height: "44px", borderRadius: "0.375rem", backgroundColor: "rgba(79, 209, 255, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1.25rem" }}>
                 <MessageSquare size={20} style={{ color: "#4FD1FF" }} />
               </div>
@@ -174,7 +143,7 @@ export default function Contacts() {
             </div>
 
             {/* Address */}
-            <div style={{ padding: "2rem", backgroundColor: "#161A20", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "0.5rem" }}>
+            <div className="lg:col-span-3" style={{ padding: "2rem", backgroundColor: "#161A20", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "0.5rem" }}>
               <div style={{ width: "44px", height: "44px", borderRadius: "0.375rem", backgroundColor: "rgba(79, 209, 255, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1.25rem" }}>
                 <MapPin size={20} style={{ color: "#4FD1FF" }} />
               </div>
@@ -190,7 +159,7 @@ export default function Contacts() {
             </div>
 
             {/* Working hours */}
-            <div style={{ padding: "2rem", backgroundColor: "#161A20", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "0.5rem" }}>
+            <div className="sm:col-span-2 lg:col-span-3" style={{ padding: "2rem", backgroundColor: "#161A20", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "0.5rem" }}>
               <div style={{ width: "44px", height: "44px", borderRadius: "0.375rem", backgroundColor: "rgba(79, 209, 255, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1.25rem" }}>
                 <Clock size={20} style={{ color: "#4FD1FF" }} />
               </div>

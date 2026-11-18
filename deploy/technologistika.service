@@ -1,0 +1,23 @@
+[Unit]
+Description=Technologistika site (Express)
+After=network.target
+
+[Service]
+Type=simple
+User=technologistika
+Group=technologistika
+WorkingDirectory=/var/www/technologistika-site
+EnvironmentFile=/var/www/technologistika-site/.env
+Environment=HOME=/tmp
+ExecStart=/usr/bin/node --experimental-sqlite dist/index.js
+Restart=always
+RestartSec=5
+UMask=0027
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/www/technologistika-site/data
+
+[Install]
+WantedBy=multi-user.target

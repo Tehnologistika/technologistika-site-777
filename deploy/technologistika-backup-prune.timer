@@ -1,0 +1,11 @@
+[Unit]
+Description=Ежедневное удаление копий базы технологист.рф старше 30 дней
+
+[Timer]
+OnCalendar=*-*-* 03:30:00
+Persistent=true
+RandomizedDelaySec=30min
+Unit=technologistika-backup-prune.service
+
+[Install]
+WantedBy=timers.target
