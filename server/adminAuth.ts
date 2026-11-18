@@ -6,10 +6,12 @@ import {
   timingSafeEqual,
 } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
+import { deleteLead } from "./leads.ts";
 
 export const SESSION_COOKIE = "__Host-admin_session";
 export const SESSION_MS = 12 * 60 * 60 * 1000;
 export const SETUP_TOKEN_MS = 24 * 60 * 60 * 1000;
+export const DEFAULT_AUDIT_RETENTION_DAYS = 365;
 
 const SCRYPT_N = 16384;
 const SCRYPT_R = 8;
@@ -379,13 +381,102 @@ export function originAllowed(
   return fetchSite === "same-origin" || fetchSite === "none";
 }
 
-export function hashIp(db: DatabaseSync, ip: string): string {
-  const pepper = ipPepper(db);
-  return createHash("sha256")
-    .update(pepper)
-    .update("|")
-    .update(ip, "utf8")
-    .digest("hex");
+let auditIpPepper: string | null = null;
+
+/** Секрет только из окружения. Короче 32 символов считается незаданным. */
+export function applyAuditIpPepper(env: NodeJS.ProcessEnv): string | null {
+  const value = (env.AUDIT_IP_PEPPER ?? "").trim();
+  auditIpPepper = value.length >= 32 ? value : null;
+  return auditIpPepper;
+}
+
+export function hashIp(ip: string, pepper = auditIpPepper): string {
+  if (!pepper || pepper.length < 32) {
+    throw new Error("AUDIT_IP_PEPPER is not configured");
+  }
+  return createHmac("sha256", pepper).update(ip, "utf8").digest("hex");
+}
+
+export function auditRetentionDaysFromEnv(raw: string | undefined): number {
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed < 1 || parsed > 3650) {
+    return DEFAULT_AUDIT_RETENTION_DAYS;
+  }
+  return Math.floor(parsed);
+}
+
+export function purgeAudit(
+  db: DatabaseSync,
+  retentionDays = DEFAULT_AUDIT_RETENTION_DAYS,
+  now = new Date()
+): number {
+  const cutoff = new Date(
+    now.getTime() - retentionDays * 24 * 60 * 60 * 1000
+  ).toISOString();
+  const result = db
+    .prepare("DELETE FROM admin_audit WHERE at_utc < ?")
+    .run(cutoff);
+  return Number(result.changes);
+}
+
+export function deletedPublicIds(
+  db: DatabaseSync,
+  sinceIso?: string | null
+): string[] {
+  const rows = (
+    sinceIso
+      ? db
+          .prepare(
+            `SELECT detail FROM admin_audit
+             WHERE action = 'delete' AND at_utc >= ?
+             ORDER BY id`
+          )
+          .all(sinceIso)
+      : db
+          .prepare(
+            `SELECT detail FROM admin_audit
+             WHERE action = 'delete'
+             ORDER BY id`
+          )
+          .all()
+  ) as Array<{ detail: string | null }>;
+  const ids: string[] = [];
+  const seen = new Set<string>();
+  for (const row of rows) {
+    const id = (row.detail ?? "").trim();
+    if (!/^T-\d+$/.test(id) || seen.has(id)) continue;
+    seen.add(id);
+    ids.push(id);
+  }
+  return ids;
+}
+
+/** Повторно удаляет заявки, которые журнал уже отметил как удалённые. */
+export function replayDeletes(
+  db: DatabaseSync,
+  ids: string[],
+  now: Date,
+  ip: string
+): { removed: string[]; absent: string[] } {
+  const removed: string[] = [];
+  const absent: string[] = [];
+  for (const id of ids) {
+    if (!/^T-\d+$/.test(id)) continue;
+    if (!deleteLead(db, id)) {
+      absent.push(id);
+      continue;
+    }
+    writeAudit(db, {
+      at: now,
+      actorId: null,
+      actorLogin: "replay",
+      action: "delete",
+      detail: id,
+      ip,
+    });
+    removed.push(id);
+  }
+  return { removed, absent };
 }
 
 export type AuditEntry = {
@@ -398,7 +489,7 @@ export type AuditEntry = {
 };
 
 export function writeAudit(db: DatabaseSync, entry: AuditEntry): void {
-  const ipHash = hashIp(db, entry.ip);
+  const ipHash = hashIp(entry.ip);
   db.prepare(
     `INSERT INTO admin_audit (at_utc, at_msk, actor_id, actor_login, action, detail, ip_hash)
      VALUES (?, ?, ?, ?, ?, ?, ?)`
@@ -942,7 +1033,7 @@ function takeIpAttempt(
   now: Date,
   policy: AuthPolicy
 ): AuthErr | null {
-  const ipHash = hashIp(db, ip);
+  const ipHash = hashIp(ip);
   const since = new Date(now.getTime() - policy.ipWindowMs).toISOString();
   db.prepare("DELETE FROM admin_login_attempts WHERE at_utc < ?").run(since);
   const row = db
@@ -960,7 +1051,7 @@ function takeIpAttempt(
 function noteAttempt(db: DatabaseSync, ip: string, now: Date): void {
   db.prepare(
     "INSERT INTO admin_login_attempts (ip_hash, at_utc) VALUES (?, ?)"
-  ).run(hashIp(db, ip), now.toISOString());
+  ).run(hashIp(ip), now.toISOString());
 }
 
 function findSetup(
@@ -1016,22 +1107,6 @@ function isLocked(user: UserRow, now: Date): boolean {
 
 function hashToken(token: string): string {
   return createHash("sha256").update(token, "utf8").digest("hex");
-}
-
-function ipPepper(db: DatabaseSync): Buffer {
-  const existing = db
-    .prepare("SELECT value FROM admin_meta WHERE key = 'ip_pepper'")
-    .get() as { value: string } | undefined;
-  if (existing && /^[0-9a-f]{64}$/.test(existing.value))
-    return Buffer.from(existing.value, "hex");
-  const created = randomBytes(32).toString("hex");
-  db.prepare(
-    "INSERT INTO admin_meta (key, value) VALUES ('ip_pepper', ?) ON CONFLICT(key) DO NOTHING"
-  ).run(created);
-  const stored = db
-    .prepare("SELECT value FROM admin_meta WHERE key = 'ip_pepper'")
-    .get() as { value: string };
-  return Buffer.from(stored.value, "hex");
 }
 
 function actorLabel(login: string): string {

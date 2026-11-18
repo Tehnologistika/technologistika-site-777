@@ -87,6 +87,8 @@ cp .env.example .env
 | `AYUB_API_URL` | Адрес внешнего API (поддомен `ayub`)         | `https://ayub.технологист.рф`  |
 | `LEADS_DB_PATH`          | Файл SQLite с заявками на этом сервере          | `./data/leads.sqlite`      |
 | `LEADS_RETENTION_DAYS`   | Срок хранения заявок, дни                       | `183`                      |
+| `AUDIT_RETENTION_DAYS`   | Срок хранения журнала админки, дни              | `365`                      |
+| `AUDIT_IP_PEPPER`        | Секрет HMAC для хеша IP в журнале               | длинная случайная строка   |
 | `ADMIN_LEGACY_TOKEN`     | Переходный общий токен, по умолчанию выключен   | `false`                    |
 | `ADMIN_TOKEN`            | Bearer только при `ADMIN_LEGACY_TOKEN=true`     | пусто                      |
 | `TELEGRAM_NOTIFY`        | Сигнал в Telegram без персональных данных       | `false`                    |

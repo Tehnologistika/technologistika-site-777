@@ -4,6 +4,7 @@ import QRCode from "qrcode";
 import {
   PRODUCTION_POLICY,
   SESSION_COOKIE,
+  applyAuditIpPepper,
   beginSetup,
   clearSessionCookie,
   clientAddress,
@@ -44,6 +45,7 @@ export type AdminAppOptions = {
 
 export function registerAdmin(app: Express, options: AdminAppOptions): void {
   const env = options.env ?? process.env;
+  applyAuditIpPepper(env);
   const policy = options.policy ?? PRODUCTION_POLICY;
   const now = () => options.now?.() ?? new Date();
   const db = options.db;

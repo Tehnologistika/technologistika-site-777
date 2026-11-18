@@ -231,7 +231,12 @@ export function retentionDaysFromEnv(raw: string | undefined): number {
 
 export function scheduleRetention(
   db: DatabaseSync,
-  retentionDays: number
+  retentionDays: number,
+  extra?: {
+    days: number;
+    purge: (db: DatabaseSync, days: number) => number;
+    label: string;
+  }
 ): NodeJS.Timeout {
   const run = () => {
     try {
@@ -239,6 +244,13 @@ export function scheduleRetention(
       if (removed > 0) console.info(`Purged ${removed} expired lead(s)`);
     } catch {
       console.error("Lead retention purge failed");
+    }
+    if (!extra) return;
+    try {
+      const removed = extra.purge(db, extra.days);
+      if (removed > 0) console.info(`Purged ${removed} expired ${extra.label}`);
+    } catch {
+      console.error("Audit retention purge failed");
     }
   };
   run();

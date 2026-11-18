@@ -1,0 +1,7 @@
+[Unit]
+Description=Удаление копий базы технологист.рф старше 30 дней
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/var/www/technologistika-site/scripts/prune-data-backups.sh

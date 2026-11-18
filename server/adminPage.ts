@@ -24,8 +24,11 @@ export function adminPageHtml(): string {
         </div>
       </div>
       <p id="staffNote" class="note" hidden>Доступен только просмотр. Удаление, выгрузка и настройки пользователей недоступны.</p>
-      <div id="ownerTools" class="bar-actions" hidden>
-        <button id="exportBtn" type="button">Выгрузить CSV</button>
+      <div id="ownerTools" hidden>
+        <div class="bar-actions">
+          <button id="exportBtn" type="button">Выгрузить CSV</button>
+        </div>
+        <p class="note">Файл содержит персональные данные. Не загружайте его в зарубежные сервисы (Google Drive, Gmail, Telegram) и удалите после использования.</p>
       </div>
       <p id="listMeta" class="note"></p>
       <div class="wrap"><table id="table">

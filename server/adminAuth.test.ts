@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
+import { createHash, createHmac } from "node:crypto";
 import { createServer } from "node:http";
-import { mkdtempSync, readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -10,16 +11,21 @@ import { runAdminCli } from "./admin-cli.ts";
 import {
   PRODUCTION_POLICY,
   SESSION_COOKIE,
+  applyAuditIpPepper,
+  auditRetentionDaysFromEnv,
   beginSetup,
   completeSetup,
   createPendingUser,
   decodeBase32,
   formatMsk,
+  hashIp,
   hashPassword,
   legacyTokenEnabled,
   listAudit,
+  purgeAudit,
   totpCode,
   verifyPassword,
+  writeAudit,
   type AuthPolicy,
 } from "./adminAuth.ts";
 import { ensureAdminSchema } from "./adminAuth.ts";
@@ -27,6 +33,9 @@ import { listLeads, openLeadsDb, saveLead } from "./leads.ts";
 import type { AddressInfo } from "node:net";
 import type { DatabaseSync } from "node:sqlite";
 import type { Server } from "node:http";
+
+const AUDIT_PEPPER = "test-audit-ip-pepper-32chars-min";
+applyAuditIpPepper({ AUDIT_IP_PEPPER: AUDIT_PEPPER });
 
 const RFC_SECRET = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";
 const OWNER_PASSWORD = "owner-passphrase-1";
@@ -116,6 +125,7 @@ test("roles, CSRF, lockout, replay and audit", async () => {
         ADMIN_TOKEN: "legacy-secret",
         ADMIN_LEGACY_TOKEN: "false",
         TELEGRAM_NOTIFY: "false",
+        AUDIT_IP_PEPPER: AUDIT_PEPPER,
       },
       policy: testPolicy,
       now: () => current,
@@ -288,6 +298,15 @@ test("roles, CSRF, lockout, replay and audit", async () => {
     assert.equal(raw.includes(Buffer.from(ip)), false);
     assert.equal(raw.includes(Buffer.from(OWNER_PASSWORD)), false);
     assert.equal(raw.includes(Buffer.from(invite.code)), false);
+    assert.equal(raw.includes(Buffer.from(AUDIT_PEPPER)), false);
+    const hmac = createHmac("sha256", AUDIT_PEPPER)
+      .update(ip, "utf8")
+      .digest("hex");
+    const bare = createHash("sha256").update(ip, "utf8").digest("hex");
+    assert.equal(view.ipHash, hmac);
+    assert.notEqual(view.ipHash, bare);
+    assert.equal(hashIp(ip), hmac);
+    assert.throws(() => hashIp(ip, "short"), /AUDIT_IP_PEPPER/);
 
     const selfDisable = await send(base, "/api/admin/users/1/disable", {
       method: "POST",
@@ -389,6 +408,7 @@ test("IP rate limit and legacy token", async () => {
         ADMIN_TOKEN: "legacy-secret",
         ADMIN_LEGACY_TOKEN: "true",
         TELEGRAM_NOTIFY: "false",
+        AUDIT_IP_PEPPER: AUDIT_PEPPER,
       },
       policy: tight,
       now: () => now,
@@ -508,7 +528,11 @@ test("owner enrolls from the CLI link and a session expires", async () => {
   const { base, server } = await listen(
     createApp({
       db,
-      env: { TELEGRAM_NOTIFY: "false", SITE_DOMAIN: "example.test" },
+      env: {
+        TELEGRAM_NOTIFY: "false",
+        SITE_DOMAIN: "example.test",
+        AUDIT_IP_PEPPER: AUDIT_PEPPER,
+      },
       policy: shortPolicy,
       now: () => current,
     })
@@ -572,6 +596,10 @@ test("owner enrolls from the CLI link and a session expires", async () => {
     const page = await send(base, "/admin", {});
     assert.equal(page.status, 200);
     assert.match(page.text, /Код из приложения/);
+    assert.match(
+      page.text,
+      /Не загружайте его в зарубежные сервисы \(Google Drive, Gmail, Telegram\)/
+    );
     assert.match(page.text, /\[hidden\] \{ display: none !important; \}/);
     const policyHeader = await fetch(`${base}/admin`);
     assert.match(
@@ -604,6 +632,101 @@ test("owner enrolls from the CLI link and a session expires", async () => {
     await close(server);
     db.close();
   }
+});
+
+test("audit rows expire after AUDIT_RETENTION_DAYS and deletes can be replayed", () => {
+  assert.equal(auditRetentionDaysFromEnv(undefined), 365);
+  assert.equal(auditRetentionDaysFromEnv("0"), 365);
+  assert.equal(auditRetentionDaysFromEnv("400"), 400);
+
+  const { db, dbPath } = freshDb();
+  const now = new Date("2026-11-18T00:00:00.000Z");
+  writeAudit(db, {
+    at: new Date("2024-01-01T00:00:00.000Z"),
+    actorId: null,
+    actorLogin: "owner",
+    action: "view",
+    detail: "old",
+    ip: "203.0.113.10",
+  });
+  writeAudit(db, {
+    at: now,
+    actorId: null,
+    actorLogin: "owner",
+    action: "view",
+    detail: "fresh",
+    ip: "203.0.113.10",
+  });
+  assert.equal(purgeAudit(db, 365, now), 1);
+  const left = listAudit(db, 10);
+  assert.equal(left.length, 1);
+  assert.equal(left[0].detail, "fresh");
+
+  const publicId = saveLead(
+    db,
+    {
+      from: "Москва",
+      to: "Тула",
+      carModel: "Лада",
+      carYear: null,
+      driveStatus: "no",
+      readyDate: null,
+      name: "Пётр",
+      phone: "+7 900 111-11-11",
+      comment: null,
+    },
+    now
+  );
+  writeAudit(db, {
+    at: now,
+    actorId: 1,
+    actorLogin: "owner",
+    action: "delete",
+    detail: publicId,
+    ip: "203.0.113.10",
+  });
+  const dir = path.dirname(dbPath);
+  const listFile = path.join(dir, "deletes.txt");
+  const exported = collect();
+  assert.equal(
+    runAdminCli(["export-deletes", "--since", "2026-11-18T00:00:00.000Z"], {
+      env: { LEADS_DB_PATH: dbPath, AUDIT_IP_PEPPER: AUDIT_PEPPER },
+      stdout: exported,
+      stderr: collect(),
+      cwd: dir,
+      envFile: path.join(dir, "missing.env"),
+    }),
+    0
+  );
+  assert.equal(exported.text.trim(), publicId);
+  assert.equal(exported.text.includes("900"), false);
+  writeFileSync(listFile, `${publicId}\n`);
+  const replayOut = collect();
+  assert.equal(
+    runAdminCli(["replay-deletes", listFile], {
+      env: { LEADS_DB_PATH: dbPath, AUDIT_IP_PEPPER: AUDIT_PEPPER },
+      stdout: replayOut,
+      stderr: collect(),
+      cwd: dir,
+      envFile: path.join(dir, "missing.env"),
+    }),
+    0
+  );
+  assert.match(replayOut.text, /Удалено повторно: 1/);
+  assert.equal(listLeads(db).length, 0);
+  const refused = collect();
+  assert.equal(
+    runAdminCli(["replay-deletes"], {
+      env: { LEADS_DB_PATH: dbPath, AUDIT_IP_PEPPER: "too-short" },
+      stdout: collect(),
+      stderr: refused,
+      cwd: dir,
+      envFile: path.join(dir, "missing.env"),
+    }),
+    1
+  );
+  assert.match(refused.text, /AUDIT_IP_PEPPER/);
+  db.close();
 });
 
 function enroll(

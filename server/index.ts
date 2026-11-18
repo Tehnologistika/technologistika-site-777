@@ -2,7 +2,12 @@ import express from "express";
 import { createServer } from "http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { ensureAdminSchema } from "./adminAuth.ts";
+import {
+  applyAuditIpPepper,
+  auditRetentionDaysFromEnv,
+  ensureAdminSchema,
+  purgeAudit,
+} from "./adminAuth.ts";
 import { createApp } from "./app.ts";
 import {
   defaultDbPath,
@@ -22,7 +27,17 @@ async function startServer() {
     db = openLeadsDb(dbPath);
     ensureAdminSchema(db);
     const days = retentionDaysFromEnv(process.env.LEADS_RETENTION_DAYS);
-    scheduleRetention(db, days);
+    const auditDays = auditRetentionDaysFromEnv(
+      process.env.AUDIT_RETENTION_DAYS
+    );
+    if (!applyAuditIpPepper(process.env)) {
+      console.error("AUDIT_IP_PEPPER is missing; admin IP hashes are disabled");
+    }
+    scheduleRetention(db, days, {
+      days: auditDays,
+      purge: purgeAudit,
+      label: "audit row(s)",
+    });
     console.info("Leads database ready");
   } catch {
     console.error("Leads database is unavailable");
